@@ -1,0 +1,85 @@
+FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu16.04
+
+ENV DEBIAN_FRONTEND noninteractive
+
+ARG OPENCV_VERSION='4.2.0'
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+      build-essential \
+      cmake  \
+      wget \
+      unzip \
+      libgtk2.0-dev \
+      pkg-config \
+      libavcodec-dev \
+      libavformat-dev \
+      libswscale-dev \
+      libpq-dev \
+      python-dev \
+      python-numpy \
+      python3-dev \
+      python3-numpy \
+      libtbb2 \
+      libtbb-dev \
+      libjpeg-dev \
+      libpng-dev \
+      libtiff-dev \
+      libjasper-dev \
+      libdc1394-22-dev \
+      libavformat-dev \
+      libtheora-dev \
+      libvorbis-dev \
+      libxvidcore-dev \
+      libx264-dev \
+      yasm \
+      libopencore-amrnb-dev \
+      libopencore-amrwb-dev \
+      libv4l-dev \
+      libxine2-dev \
+      libgstreamer1.0-dev \
+      libgstreamer-plugins-base1.0-dev \
+      libeigen3-dev \
+      libglew-dev \
+      libtiff5-dev \
+      zlib1g-dev \
+      libpng12-dev \
+      libavformat-dev \
+      libavutil-dev \
+      libpostproc-dev \
+      libvtk6-dev
+
+WORKDIR /opt
+RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip && \
+    unzip ${OPENCV_VERSION}.zip && rm ${OPENCV_VERSION}.zip && \
+    mv opencv-${OPENCV_VERSION} opencv && \
+    wget https://github.com/opencv/opencv_contrib/archive/${OPENCV_VERSION}.zip && \
+    unzip ${OPENCV_VERSION}.zip && rm ${OPENCV_VERSION}.zip && \
+    mv opencv_contrib-${OPENCV_VERSION} opencv/opencv_contrib && \
+    mkdir /opt/opencv/build && cd /opt/opencv/build && \
+    cmake \
+      -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D BUILD_EXAMPLES=OFF \
+      -D WITH_TBB=ON \
+      -D WITH_IPP=ON \
+      -D FORCE_VTK=ON \
+      -D WITH_V4L=ON \
+      -D WITH_XINE=ON \
+      -D WITH_GDAL=ON \
+      -D WITH_OPENCL=ON \
+      -D WITH_OPENGL=ON \
+      -D WITH_CUDA=ON \
+      -D OPENCV_DNN_CUDA=OFF \
+      -D CUDA_ARCH_BIN="3.0 3.5 5.0 6.0 6.2 7.0 7.5" \
+      -D CUDA_ARCH_PTX="3.0 3.5 5.0 6.0 6.2 7.0 7.5" \
+      # -D CUDA_ARCH_BIN="7.5" \
+      # -D CUDA_ARCH_PTX="7.5" \
+      -D WITH_CUBLAS=ON \
+      -D WITH_CUFFT=ON \
+      -D WITH_EIGEN=ON \
+      -D EIGEN_INCLUDE_PATH=/usr/include/eigen3 \
+      -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
+      .. && \
+    make -j "$(nproc --all)" && \
+    make install && \
+    make clean
